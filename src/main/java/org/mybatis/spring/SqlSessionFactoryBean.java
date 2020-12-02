@@ -95,13 +95,21 @@ public class SqlSessionFactoryBean
   private static final MetadataReaderFactory METADATA_READER_FACTORY = new CachingMetadataReaderFactory();
 
   private Resource configLocation;
-
+  /**
+   * mybatis configuration
+   */
   private Configuration configuration;
-
+  /**
+   * mapper.xml 这些资源
+   */
   private Resource[] mapperLocations;
-
+  /**
+   * java的 datasource
+   */
   private DataSource dataSource;
-
+  /**
+   * mybatis 事务工厂
+   */
   private TransactionFactory transactionFactory;
 
   private Properties configurationProperties;
@@ -138,7 +146,9 @@ public class SqlSessionFactoryBean
   private DatabaseIdProvider databaseIdProvider;
 
   private Class<? extends VFS> vfs;
-
+  /**
+   * mybatis cache
+   */
   private Cache cache;
 
   private ObjectFactory objectFactory;
@@ -483,11 +493,12 @@ public class SqlSessionFactoryBean
    */
   @Override
   public void afterPropertiesSet() throws Exception {
+    // 初始化调用，在属性设置之后
     notNull(dataSource, "Property 'dataSource' is required");
     notNull(sqlSessionFactoryBuilder, "Property 'sqlSessionFactoryBuilder' is required");
     state((configuration == null && configLocation == null) || !(configuration != null && configLocation != null),
         "Property 'configuration' and 'configLocation' can not specified with together");
-
+    // 构建 sqlSessionFactory
     this.sqlSessionFactory = buildSqlSessionFactory();
   }
 
@@ -503,11 +514,13 @@ public class SqlSessionFactoryBean
    *           if configuration is failed
    */
   protected SqlSessionFactory buildSqlSessionFactory() throws Exception {
-
+    // mybatis 配置文件
     final Configuration targetConfiguration;
 
     XMLConfigBuilder xmlConfigBuilder = null;
+    //
     if (this.configuration != null) {
+      // tip: 指定了 configuration 规则
       targetConfiguration = this.configuration;
       if (targetConfiguration.getVariables() == null) {
         targetConfiguration.setVariables(this.configurationProperties);
@@ -515,15 +528,18 @@ public class SqlSessionFactoryBean
         targetConfiguration.getVariables().putAll(this.configurationProperties);
       }
     } else if (this.configLocation != null) {
+      // tip: xml配置规则
       xmlConfigBuilder = new XMLConfigBuilder(this.configLocation.getInputStream(), null, this.configurationProperties);
       targetConfiguration = xmlConfigBuilder.getConfiguration();
     } else {
+      // tip: 这里是默认配置规则
       LOGGER.debug(
           () -> "Property 'configuration' or 'configLocation' not specified, using default MyBatis Configuration");
       targetConfiguration = new Configuration();
       Optional.ofNullable(this.configurationProperties).ifPresent(targetConfiguration::setVariables);
     }
 
+    // 设置 configuration
     Optional.ofNullable(this.objectFactory).ifPresent(targetConfiguration::setObjectFactory);
     Optional.ofNullable(this.objectWrapperFactory).ifPresent(targetConfiguration::setObjectWrapperFactory);
     Optional.ofNullable(this.vfs).ifPresent(targetConfiguration::setVfsImpl);
@@ -534,6 +550,7 @@ public class SqlSessionFactoryBean
           .filter(clazz -> !clazz.isMemberClass()).forEach(targetConfiguration.getTypeAliasRegistry()::registerAlias);
     }
 
+    // typeAliases
     if (!isEmpty(this.typeAliases)) {
       Stream.of(this.typeAliases).forEach(typeAlias -> {
         targetConfiguration.getTypeAliasRegistry().registerAlias(typeAlias);
@@ -541,6 +558,7 @@ public class SqlSessionFactoryBean
       });
     }
 
+    // plugins
     if (!isEmpty(this.plugins)) {
       Stream.of(this.plugins).forEach(plugin -> {
         targetConfiguration.addInterceptor(plugin);
@@ -548,12 +566,14 @@ public class SqlSessionFactoryBean
       });
     }
 
+    // typeHandlersPackage
     if (hasLength(this.typeHandlersPackage)) {
       scanClasses(this.typeHandlersPackage, TypeHandler.class).stream().filter(clazz -> !clazz.isAnonymousClass())
           .filter(clazz -> !clazz.isInterface()).filter(clazz -> !Modifier.isAbstract(clazz.getModifiers()))
           .forEach(targetConfiguration.getTypeHandlerRegistry()::register);
     }
 
+    // typeHandlers
     if (!isEmpty(this.typeHandlers)) {
       Stream.of(this.typeHandlers).forEach(typeHandler -> {
         targetConfiguration.getTypeHandlerRegistry().register(typeHandler);
@@ -561,8 +581,10 @@ public class SqlSessionFactoryBean
       });
     }
 
+    // defaultEnumTypeHandler
     targetConfiguration.setDefaultEnumTypeHandler(defaultEnumTypeHandler);
 
+    // scriptingLanguageDrivers
     if (!isEmpty(this.scriptingLanguageDrivers)) {
       Stream.of(this.scriptingLanguageDrivers).forEach(languageDriver -> {
         targetConfiguration.getLanguageRegistry().register(languageDriver);
@@ -572,6 +594,7 @@ public class SqlSessionFactoryBean
     Optional.ofNullable(this.defaultScriptingLanguageDriver)
         .ifPresent(targetConfiguration::setDefaultScriptingLanguage);
 
+    // databaseIdProvider
     if (this.databaseIdProvider != null) {// fix #64 set databaseId before parse mapper xmls
       try {
         targetConfiguration.setDatabaseId(this.databaseIdProvider.getDatabaseId(this.dataSource));
@@ -580,8 +603,10 @@ public class SqlSessionFactoryBean
       }
     }
 
+    // cache
     Optional.ofNullable(this.cache).ifPresent(targetConfiguration::addCache);
 
+    // 解析的也是 configuration
     if (xmlConfigBuilder != null) {
       try {
         xmlConfigBuilder.parse();
@@ -593,10 +618,13 @@ public class SqlSessionFactoryBean
       }
     }
 
+    // 创建 Mybatis 的 Environment
+    // 这里一般是 SpringManagedTransactionFactory，如果有指定那就是 this.transactionFactory
     targetConfiguration.setEnvironment(new Environment(this.environment,
         this.transactionFactory == null ? new SpringManagedTransactionFactory() : this.transactionFactory,
         this.dataSource));
 
+    // mapperLocations 加载 mapper.xml 配置文件
     if (this.mapperLocations != null) {
       if (this.mapperLocations.length == 0) {
         LOGGER.warn(() -> "Property 'mapperLocations' was specified but matching resources are not found.");
@@ -620,7 +648,7 @@ public class SqlSessionFactoryBean
     } else {
       LOGGER.debug(() -> "Property 'mapperLocations' was not specified.");
     }
-
+    // 创建 SqlSessionFactory
     return this.sqlSessionFactoryBuilder.build(targetConfiguration);
   }
 

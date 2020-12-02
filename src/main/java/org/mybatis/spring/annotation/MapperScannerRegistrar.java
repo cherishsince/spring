@@ -68,8 +68,11 @@ public class MapperScannerRegistrar implements ImportBeanDefinitionRegistrar, Re
    */
   @Override
   public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+    // importingClassMetadata 就是 @Import 标签，将属性合并
     AnnotationAttributes mapperScanAttrs = AnnotationAttributes
         .fromMap(importingClassMetadata.getAnnotationAttributes(MapperScan.class.getName()));
+    // registerBeanDefinitions 就是注册 beanDefinition
+    // 获取注解信息，配置 MapperScannerConfigurer 生产 beanDefinition(和 xml没有啥区别)
     if (mapperScanAttrs != null) {
       registerBeanDefinitions(importingClassMetadata, mapperScanAttrs, registry,
           generateBaseBeanName(importingClassMetadata, 0));
@@ -137,13 +140,13 @@ public class MapperScannerRegistrar implements ImportBeanDefinitionRegistrar, Re
     }
 
     builder.addPropertyValue("basePackage", StringUtils.collectionToCommaDelimitedString(basePackages));
-
+    // 注册 BeanDefinition
     registry.registerBeanDefinition(beanName, builder.getBeanDefinition());
-
   }
 
   private static String generateBaseBeanName(AnnotationMetadata importingClassMetadata, int index) {
-    return importingClassMetadata.getClassName() + "#" + MapperScannerRegistrar.class.getSimpleName() + "#" + index;
+    return importingClassMetadata.getClassName() + "#" +
+      MapperScannerRegistrar.class.getSimpleName() + "#" + index;
   }
 
   private static String getDefaultBasePackage(AnnotationMetadata importingClassMetadata) {

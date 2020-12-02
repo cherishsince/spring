@@ -29,6 +29,8 @@ import org.springframework.jdbc.support.SQLExceptionTranslator;
 import org.springframework.transaction.TransactionException;
 
 /**
+ * 用于转换 mybatis 异常，转换为 spring 的 DataAccessException
+ *
  * Default exception translator.
  *
  * Translates MyBatis SqlSession returned exception into a Spring {@code DataAccessException} using Spring's

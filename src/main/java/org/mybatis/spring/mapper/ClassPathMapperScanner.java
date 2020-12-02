@@ -81,6 +81,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
   private String defaultScope;
 
   public ClassPathMapperScanner(BeanDefinitionRegistry registry) {
+    // BeanDefinitionRegistry 注册器
     super(registry, false);
   }
 
@@ -164,6 +165,7 @@ public class ClassPathMapperScanner extends ClassPathBeanDefinitionScanner {
    * that extends a markerInterface or/and those annotated with the annotationClass
    */
   public void registerFilters() {
+    // 允许所有接口
     boolean acceptAllInterfaces = true;
 
     // if specified, use the given annotation and / or marker interface

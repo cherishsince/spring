@@ -94,6 +94,7 @@ public final class SqlSessionUtils {
     notNull(sessionFactory, NO_SQL_SESSION_FACTORY_SPECIFIED);
     notNull(executorType, NO_EXECUTOR_TYPE_SPECIFIED);
 
+    // 获取 SqlSessionHolder
     SqlSessionHolder holder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
 
     SqlSession session = sessionHolder(executorType, holder);
@@ -101,9 +102,10 @@ public final class SqlSessionUtils {
       return session;
     }
 
+    // 没有 session 就创建一个 SqlSession
     LOGGER.debug(() -> "Creating a new SqlSession");
     session = sessionFactory.openSession(executorType);
-
+    // 注册 SessionHolder
     registerSessionHolder(sessionFactory, executorType, exceptionTranslator, session);
 
     return session;
@@ -133,11 +135,14 @@ public final class SqlSessionUtils {
 
       if (environment.getTransactionFactory() instanceof SpringManagedTransactionFactory) {
         LOGGER.debug(() -> "Registering transaction synchronization for SqlSession [" + session + "]");
-
+        // 创建 SqlSessionHolder
         holder = new SqlSessionHolder(session, executorType, exceptionTranslator);
+        // SqlSessionHolder 绑定 TransactionSynchronizationManager
         TransactionSynchronizationManager.bindResource(sessionFactory, holder);
+        // 绑定 SqlSessionSynchronization，用于解决 SqlSession 现场安全问题
         TransactionSynchronizationManager
             .registerSynchronization(new SqlSessionSynchronization(holder, sessionFactory));
+        // 开启线程安全的事务处理
         holder.setSynchronizedWithTransaction(true);
         holder.requested();
       } else {

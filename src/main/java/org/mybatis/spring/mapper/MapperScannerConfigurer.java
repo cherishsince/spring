@@ -1,12 +1,12 @@
 /**
  * Copyright 2010-2020 the original author or authors.
- *
+ * <p>
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -89,7 +89,7 @@ import org.springframework.util.StringUtils;
  * @see ClassPathMapperScanner
  */
 public class MapperScannerConfigurer
-    implements BeanDefinitionRegistryPostProcessor, InitializingBean, ApplicationContextAware, BeanNameAware {
+  implements BeanDefinitionRegistryPostProcessor, InitializingBean, ApplicationContextAware, BeanNameAware {
 
   private String basePackage;
 
@@ -353,7 +353,7 @@ public class MapperScannerConfigurer
     if (this.processPropertyPlaceHolders) {
       processPropertyPlaceHolders();
     }
-
+    // 创建 ClassPathMapperScanner 扫描 mapper
     ClassPathMapperScanner scanner = new ClassPathMapperScanner(registry);
     scanner.setAddToConfig(this.addToConfig);
     scanner.setAnnotationClass(this.annotationClass);
@@ -371,9 +371,11 @@ public class MapperScannerConfigurer
     if (StringUtils.hasText(defaultScope)) {
       scanner.setDefaultScope(defaultScope);
     }
+    // 调用过滤器
     scanner.registerFilters();
+    // 扫描 package
     scanner.scan(
-        StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
+      StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
   }
 
   /*
@@ -384,11 +386,11 @@ public class MapperScannerConfigurer
    */
   private void processPropertyPlaceHolders() {
     Map<String, PropertyResourceConfigurer> prcs = applicationContext.getBeansOfType(PropertyResourceConfigurer.class,
-        false, false);
+      false, false);
 
     if (!prcs.isEmpty() && applicationContext instanceof ConfigurableApplicationContext) {
       BeanDefinition mapperScannerBean = ((ConfigurableApplicationContext) applicationContext).getBeanFactory()
-          .getBeanDefinition(beanName);
+        .getBeanDefinition(beanName);
 
       // PropertyResourceConfigurer does not expose any methods to explicitly perform
       // property placeholder substitution. Instead, create a BeanFactory that just
@@ -410,11 +412,11 @@ public class MapperScannerConfigurer
     }
     this.basePackage = Optional.ofNullable(this.basePackage).map(getEnvironment()::resolvePlaceholders).orElse(null);
     this.sqlSessionFactoryBeanName = Optional.ofNullable(this.sqlSessionFactoryBeanName)
-        .map(getEnvironment()::resolvePlaceholders).orElse(null);
+      .map(getEnvironment()::resolvePlaceholders).orElse(null);
     this.sqlSessionTemplateBeanName = Optional.ofNullable(this.sqlSessionTemplateBeanName)
-        .map(getEnvironment()::resolvePlaceholders).orElse(null);
+      .map(getEnvironment()::resolvePlaceholders).orElse(null);
     this.lazyInitialization = Optional.ofNullable(this.lazyInitialization).map(getEnvironment()::resolvePlaceholders)
-        .orElse(null);
+      .orElse(null);
     this.defaultScope = Optional.ofNullable(this.defaultScope).map(getEnvironment()::resolvePlaceholders).orElse(null);
   }
 

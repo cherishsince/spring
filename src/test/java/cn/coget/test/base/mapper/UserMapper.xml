@@ -20,12 +20,12 @@
     PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="cn.coget.test.t3.mapper.UserMapper">
+<mapper namespace="cn.coget.test.base.mapper.UserMapper">
 
   <cache />
 
   <!--  查询根据id  -->
-  <select id="selectById" resultType="cn.coget.test.t3.entiry.UserDO" parameterType="java.lang.Long">
+  <select id="selectById" resultType="cn.coget.test.base.entiry.UserDO" parameterType="java.lang.Long">
     SELECT * FROM `user`
     WHERE id = #{id}
   </select>

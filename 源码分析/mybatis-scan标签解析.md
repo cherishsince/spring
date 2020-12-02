@@ -1,65 +1,50 @@
-/**
- * Copyright 2010-2020 the original author or authors.
- * <p>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-package org.mybatis.spring.config;
+# mybatis-scan标签解析
 
-import org.mybatis.spring.mapper.ClassPathMapperScanner;
-import org.mybatis.spring.mapper.MapperFactoryBean;
-import org.mybatis.spring.mapper.MapperScannerConfigurer;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
-import org.springframework.beans.factory.support.BeanDefinitionBuilder;
-import org.springframework.beans.factory.support.BeanNameGenerator;
-import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
-import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.beans.factory.xml.XmlReaderContext;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
-import org.w3c.dom.Element;
+`<mybatis:scan>` 注解，属于 spring 非核心标签，都会采用自定义标签处理，和spring mvc 一样；spring 自定义标签，解析需要实现 `AbstractBeanDefinitionParser` 解析器，然后通过`NamespaceHandlerSupport` 注册解析的标签；
 
-import java.lang.annotation.Annotation;
+代码如下：
 
-/**
- * A {#code BeanDefinitionParser} that handles the element scan of the MyBatis. namespace
- *
- * @author Lishu Luo
- * @author Eduardo Macarron
- *
- * @since 1.2.0
- * @see MapperFactoryBean
- * @see ClassPathMapperScanner
- * @see MapperScannerConfigurer
- */
+```xml
+// applicationContext.xml
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 
+     http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring.xsd
+     http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+  <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+    <property name="driverClassName" value="com.mysql.jdbc.Driver"></property>
+    <property name="url" value="jdbc:mysql://120.78.218.163:3306/storm_sports"></property>
+    <property name="username" value="root"></property>
+    <property name="password" value="@D23d7a3df91cc42"></property>
+  </bean>
+
+  <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+    <property name="dataSource" ref="dataSource" />
+  </bean>
+
+  <mybatis:scan base-package="cn.coget.test.base.mapper" />
+</beans>
+```
+
+说明：
+
+- 我们在 `applicationContext.xml` 配置了，`<mybatis:scan>`  扫描 mapper，需要注意的是需要导入 ` xmlns:mybatis="http://mybatis.org/schema/mybatis-spring"`  命名空间和.xsd标签规范，**不添加spring在校验xml的时候会不通过！！！**
+
+
+
+##### MapperScannerBeanDefinitionParser
+
+xml 解析器，代码如下：
+
+```java
 public class MapperScannerBeanDefinitionParser extends AbstractBeanDefinitionParser {
-
-  private static final String ATTRIBUTE_BASE_PACKAGE = "base-package";
-  private static final String ATTRIBUTE_ANNOTATION = "annotation";
-  private static final String ATTRIBUTE_MARKER_INTERFACE = "marker-interface";
-  private static final String ATTRIBUTE_NAME_GENERATOR = "name-generator";
-  private static final String ATTRIBUTE_TEMPLATE_REF = "template-ref";
-  private static final String ATTRIBUTE_FACTORY_REF = "factory-ref";
-  private static final String ATTRIBUTE_MAPPER_FACTORY_BEAN_CLASS = "mapper-factory-bean-class";
-  private static final String ATTRIBUTE_LAZY_INITIALIZATION = "lazy-initialization";
-  private static final String ATTRIBUTE_DEFAULT_SCOPE = "default-scope";
-
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.2
-   */
+    
+  // 略...
+    
   @Override
   protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
     // 这里是配置 MapperScannerConfigurer(通过 BeanDefinitionBuilder 生产)
@@ -112,14 +97,39 @@ public class MapperScannerBeanDefinitionParser extends AbstractBeanDefinitionPar
     // 构建出一个 MapperScannerConfigurer BeanDefinition
     return builder.getBeanDefinition();
   }
+   
+   // 略...
+}
+```
 
-  /**
-   * {@inheritDoc}
-   *
-   * @since 2.0.2
-   */
+说明：
+
+- `AbstractBeanDefinitionParser` 是spring用于解析，自定义扩展标签，
+- `parseInternal` 是有，内部调用，进行解析，解析完后或得一个 `BeanDefinition` ,
+- `AbstractBeanDefinitionParser`  内部会自动注册 `BeanDefinition` 所以我们解析玩返回后，会自动注册
+
+
+
+##### NamespaceHandler
+
+有了解析器，还需要去注册，解析器，代码如下：
+
+```java
+public class NamespaceHandler extends NamespaceHandlerSupport {
+
   @Override
-  protected boolean shouldGenerateIdAsFallback() {
-    return true;
+  public void init() {
+    registerBeanDefinitionParser("scan", new MapperScannerBeanDefinitionParser());
   }
 }
+```
+
+说明：
+
+- spring 是通过 NamespaceHandlerSupport 来注册，解析器。
+- spring 在解析自定义标签的时候，会检查解析器，然后进行解析。
+
+
+
+完结~
+

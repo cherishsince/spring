@@ -1,6 +1,6 @@
-package cn.coget.test.t3.mapper;
+package cn.coget.test.base.mapper;
 
-import cn.coget.test.t3.entiry.UserDO;
+import cn.coget.test.base.entiry.UserDO;
 import org.apache.ibatis.annotations.Param;
 
 /**

@@ -1,4 +1,4 @@
-package cn.coget.test.t3.entiry;
+package cn.coget.test.base.entiry;
 
 import java.io.Serializable;
 
