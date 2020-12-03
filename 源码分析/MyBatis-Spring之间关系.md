@@ -18,5 +18,9 @@ public void setSqlSessionFactory(SqlSessionFactory sqlSessionFactory) {
 说明：
 
 - `SqlSessionTemplate` 是在，创建 `SqlSessionFactoryBean` 时候创建。
-- `SqlSessionTemplate`  继承了 `SqlSessionDaoSupport` ，在设置 `setSqlSessionFactory` 创建 teamplate
+- `SqlSessionTemplate`  继承了 `SqlSessionDaoSupport` ，在设置 `setSqlSessionFactory` 创建 teamplate。
+
+
+
+
 

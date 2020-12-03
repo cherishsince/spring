@@ -96,7 +96,6 @@ public final class SqlSessionUtils {
 
     // 获取 SqlSessionHolder
     SqlSessionHolder holder = (SqlSessionHolder) TransactionSynchronizationManager.getResource(sessionFactory);
-
     SqlSession session = sessionHolder(executorType, holder);
     if (session != null) {
       return session;
