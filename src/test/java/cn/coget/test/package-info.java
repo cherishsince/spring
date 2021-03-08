@@ -1,8 +1,5 @@
 /**
- * @ClassName: package-info
- * @Description:
- * @Author: fan
- * @time: 2020/12/02 10:30
- * @Version 1.0
+ * author: sin
+ * time: 2020/12/1 7:45 下午
  */
 package cn.coget.test;
